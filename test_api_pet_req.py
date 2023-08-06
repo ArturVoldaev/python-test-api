@@ -4,7 +4,7 @@ from faker import Faker
 import generate_obj
 
 
-class TestApi(unittest.TestCase):
+class TestPetApi(unittest.TestCase):
 
     fake = Faker()
 
