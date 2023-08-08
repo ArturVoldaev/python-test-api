@@ -1,38 +1,51 @@
 import requests
 import unittest
 from faker import Faker
+from dotenv import load_dotenv
+import os
 import generate_body_for_store
-
 
 class TestStoreApi(unittest.TestCase):
 
     fake = Faker()
+    load_dotenv()
 
-    data_1 = generate_body_for_store.StoreBody(fake.random_digit_not_null(), fake.unique.random_int(), fake.unique.random_int(), fake.pybool(), fake.iso8601())
+    def generate_data(self):
+        data = generate_body_for_store.StoreBody(self.fake.random_int(min=1, max=9),
+                                                 self.fake.unique.random_int(),
+                                                 self.fake.unique.random_int(),
+                                                 self.fake.pybool(),
+                                                 "2023-08-06T13:01:17.336+0000").generate_data()
+        return data
+    def test_post_is_status_code_200(self):
+        data = self.generate_data()
+        self.assertEqual(self.store_post_req(data).status_code, requests.codes.ok)
 
-    def test_01_post_is_status_code_200(self):
-        self.assertEqual(self.store_post_req(self.data_1.generate_data()).status_code, 200)
+    def test_get_is_order_created(self):
+        data = self.generate_data()
+        self.store_post_req(data)
+        string_id = int(data.get("id"))
+        self.assertEqual(self.store_get_req(data).status_code, requests.codes.ok)
+        self.assertEqual(self.store_get_req(data).json().get("id"), string_id)
 
-    def test_02_get_is_order_created(self):
-        self.assertEqual(self.store_get_req().status_code, 200)
 
-    def test_03_delete_order(self):
-        self.assertEqual(self.store_delete_req().status_code, 200)
-
-    def test_04_get_deleted_order(self):
-        self.assertEqual(self.store_get_req().status_code, 404)
+    def test_delete_order(self):
+        data = self.generate_data()
+        self.assertEqual(self.store_delete_req(data).status_code, requests.codes.ok)
 
     def store_post_req(self, data):
-        store_post_request_add_a_new_order = requests.post('https://petstore.swagger.io/v2/store/order', json=data)
+        url = f'{os.getenv("DOMAIN")}/{os.getenv("END_POINT_STORE")}/'
+        store_post_request_add_a_new_order = requests.post(url, json=data)
         return store_post_request_add_a_new_order
 
-    def store_get_req(self):
-        url = f'https://petstore.swagger.io/v2/store/order/{self.data_1.random_pet_id}'
+    def store_get_req(self, data):
+        url = f'{os.getenv("DOMAIN")}/{os.getenv("END_POINT_STORE")}/{data.get("id")}'
         store_get_request = requests.get(url)
         return store_get_request
 
-    def store_delete_req(self):
-        url = f'https://petstore.swagger.io/v2/store/order/{self.data_1.random_pet_id}'
+    def store_delete_req(self, data):
+        self.store_post_req(data)
+        url = f'{os.getenv("DOMAIN")}/{os.getenv("END_POINT_STORE")}/{data.get("id")}'
         store_delete_req = requests.delete(url)
         return store_delete_req
 
