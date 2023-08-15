@@ -2,6 +2,7 @@ import requests
 from faker import Faker
 from dotenv import load_dotenv
 import os
+import pytest
 import generate_body_for_user
 
 

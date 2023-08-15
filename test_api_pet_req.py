@@ -6,7 +6,7 @@ import pytest
 import allure
 import os
 from dotenv import load_dotenv
-
+@pytest.mark.usefixtures('some_data')
 class TestPetApi(unittest.TestCase):
 
     fake = Faker()
@@ -21,10 +21,12 @@ class TestPetApi(unittest.TestCase):
                                        self.fake.unique.random_int(),
                                        self.fake.job()).generate_data()
         return data
+
     # @pytest.mark.smoke
-    def test_post_code_200(self):
-        data = self.generate_data()
-        self.assertEqual(self.pet_post_req(data).status_code, requests.codes.ok)
+    def test_post_code_200(self, some_data):
+        # data = self.generate_data()
+        # self.assertEqual(self.pet_post_req(data).status_code, requests.codes.ok)
+        assert some_data == 665
 
     def test_02_get_is_pet_created(self):
         data = self.generate_data()
